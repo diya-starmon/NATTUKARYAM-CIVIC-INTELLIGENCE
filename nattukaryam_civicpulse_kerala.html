@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NattuKaryam (നാട്ടുകാര്യം) — CivicPulse Kerala</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Manjari (Malayalam friendly) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manjari:wght@400;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            kerala: {
+              emerald: '#059669',
+              darkgreen: '#064e3b',
+              forest: '#022c22',
+              gold: '#d97706',
+              amber: '#f59e0b',
+              sand: '#f8fafc',
+              slate: '#0f172a'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            ml: ['Manjari', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #059669;
+    }
+
+    /* Pulse radar effect for map pins */
+    @keyframes pinRipple {
+      0% { transform: scale(0.9); opacity: 0.9; }
+      100% { transform: scale(2.4); opacity: 0; }
+    }
+    .pin-pulse {
+      animation: pinRipple 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+    }
+
+    /* Smooth tab transitions */
+    .view-panel {
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col selection:bg-emerald-500/20 selection:text-emerald-900">
+
+  <!-- Top Announcement Bar (Monsoon Alert Notice) -->
+  <div class="bg-gradient-to-r from-emerald-900 via-kerala-forest to-emerald-950 text-white text-xs py-1.5 px-4 border-b border-emerald-800/60">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-slate-900 uppercase">Monsoon Prep</span>
+        <span class="text-emerald-200">Pre-Monsoon drainage desilting & pothole drive active across 14 Districts.</span>
+      </div>
+      <div class="hidden sm:flex items-center space-x-4 text-[11px] text-emerald-300">
+        <span>LSGD Helpline: <strong>1800-425-1000</strong></span>
+        <span>•</span>
+        <span>KSDMA Alert: <strong>Level Yellow (Normal Watch)</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header Navigation -->
+  <header class="bg-white/95 backdrop-blur-md sticky top-0 z-30 border-b border-slate-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      
+      <!-- Brand & Malayalam Subtitle -->
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="switchNav('feed')">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center text-white shadow-md shadow-emerald-900/20">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="font-bold text-lg text-slate-900 tracking-tight">NattuKaryam</h1>
+            <span class="font-ml text-sm font-bold text-emerald-700 px-1.5 py-0.5 bg-emerald-50 rounded">നാട്ടുകാര്യം</span>
+          </div>
+          <p class="text-[11px] text-slate-500">Civic Action & Grievance Grid — Kerala LSGD Connect</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="hidden md:flex items-center space-x-1 lg:space-x-2">
+        <button id="nav-btn-feed" onclick="switchNav('feed')" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 flex items-center space-x-1.5 transition">
+          <span>📍 Live Civic Map & Feed</span>
+        </button>
+        <button id="nav-btn-drives" onclick="switchNav('drives')" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center space-x-1.5 transition">
+          <span>🤝 Community Drives</span>
+          <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800 font-bold" id="drive-badge">3</span>
+        </button>
+        <button id="nav-btn-panchayat" onclick="switchNav('panchayat')" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center space-x-1.5 transition">
+          <span>🏛️ Ward Councillor View</span>
+        </button>
+      </nav>
+
+      <!-- Action Button: Report Issue -->
+      <div class="flex items-center space-x-3">
+        <button onclick="openReportModal()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium text-xs tracking-wide shadow-md shadow-emerald-700/20 active:scale-95 transition flex items-center space-x-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span>Report an Issue</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Navigation Subbar -->
+    <div class="md:hidden flex border-t border-slate-200 justify-around text-xs py-2 bg-slate-50 font-medium">
+      <button onclick="switchNav('feed')" id="mob-nav-feed" class="text-emerald-700 font-bold">📍 Map & Feed</button>
+      <button onclick="switchNav('drives')" id="mob-nav-drives" class="text-slate-600">🤝 Drives</button>
+      <button onclick="switchNav('panchayat')" id="mob-nav-panchayat" class="text-slate-600">🏛️ Ward Council</button>
+    </div>
+  </header>
+
+  <!-- Notification Toast Container -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-3 border border-slate-700">
+      <span id="toast-icon" class="text-lg">✅</span>
+      <span id="toast-msg" class="text-xs font-medium">Action successful</span>
+    </div>
+  </div>
+
+  <!-- Main Dynamic View Wrapper -->
+  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 flex-grow">
+
+    <!-- ============================================== -->
+    <!-- VIEW 1: INTERACTIVE CIVIC MAP & FEED -->
+    <!-- ============================================== -->
+    <section id="view-feed" class="view-panel space-y-6">
+
+      <!-- District & Quick Stats Summary Bar -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+          <div>
+            <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Active Complaints</span>
+            <div class="text-2xl font-bold text-slate-900 mt-0.5" id="stat-active">18</div>
+            <span class="text-[10px] text-amber-600 font-medium font-ml">പരിഹരിക്കാനുള്ളവ</span>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg">⚠️</div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+          <div>
+            <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">In Inspection</span>
+            <div class="text-2xl font-bold text-blue-600 mt-0.5" id="stat-progress">7</div>
+            <span class="text-[10px] text-blue-600 font-medium font-ml">പരിശോധനയിൽ</span>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg">⚙️</div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+          <div>
+            <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Resolved This Week</span>
+            <div class="text-2xl font-bold text-emerald-600 mt-0.5" id="stat-resolved">42</div>
+            <span class="text-[10px] text-emerald-600 font-medium font-ml">പരിഹരിച്ചവ</span>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">✅</div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+          <div>
+            <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Avg Resolution Time</span>
+            <div class="text-2xl font-bold text-slate-800 mt-0.5">3.4 <span class="text-sm font-normal text-slate-500">Days</span></div>
+            <span class="text-[10px] text-slate-400 font-medium">LSGD Benchmark</span>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-lg">⏱️</div>
+        </div>
+      </div>
+
+      <!-- Filters & Control Strip -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        
+        <!-- Category Pill Filters -->
+        <div class="flex items-center space-x-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 text-xs">
+          <button onclick="setCategoryFilter('all')" class="cat-pill active px-3 py-1.5 rounded-full font-semibold bg-emerald-600 text-white transition whitespace-nowrap">
+            All Issues (<span id="count-all">0</span>)
+          </button>
+          <button onclick="setCategoryFilter('waste')" class="cat-pill px-3 py-1.5 rounded-full font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition whitespace-nowrap">
+            🗑️ Waste (മാലിന്യം)
+          </button>
+          <button onclick="setCategoryFilter('roads')" class="cat-pill px-3 py-1.5 rounded-full font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition whitespace-nowrap">
+            🚧 Roads & Potholes (റോഡുകൾ)
+          </button>
+          <button onclick="setCategoryFilter('water')" class="cat-pill px-3 py-1.5 rounded-full font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition whitespace-nowrap">
+            💧 Water & Drains (കുടിവെള്ളം/കനാൽ)
+          </button>
+          <button onclick="setCategoryFilter('lighting')" class="cat-pill px-3 py-1.5 rounded-full font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition whitespace-nowrap">
+            💡 Streetlights (വിളക്കുകൾ)
+          </button>
+        </div>
+
+        <!-- Search & Status Selectors -->
+        <div class="flex items-center space-x-2 w-full md:w-auto justify-end">
+          <select id="status-filter" onchange="applyFilters()" class="text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-emerald-500">
+            <option value="all">Status: All (എല്ലാം)</option>
+            <option value="Reported">⚠️ Reported (ലഭിച്ചവ)</option>
+            <option value="In Progress">⚙️ In Progress (നടപടിയിൽ)</option>
+            <option value="Resolved">✅ Resolved (തീർപ്പാക്കിയവ)</option>
+          </select>
+
+          <input type="text" id="search-input" oninput="applyFilters()" placeholder="Search Ward, Landmark..." 
+            class="text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 w-full sm:w-48">
+        </div>
+      </div>
+
+      <!-- Main Grid: Interactive Map (Left) + Issue Cards Stream (Right) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left: Interactive Simulated Geographic Canvas Map -->
+        <div class="lg:col-span-5 bg-white rounded-3xl border border-slate-200 p-4 shadow-sm flex flex-col space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <h3 class="text-sm font-bold text-slate-900">Ward Geospatial Radar</h3>
+            </div>
+            <span class="text-[11px] font-mono text-slate-400">Panchayat Sector: Zone 4 (Kochi-Aluva Corridor)</span>
+          </div>
+
+          <!-- Canvas Map Box -->
+          <div class="relative w-full aspect-square sm:aspect-[4/3] rounded-2xl overflow-hidden bg-slate-900 border border-slate-800">
+            <canvas id="civic-map-canvas" class="w-full h-full block cursor-crosshair"></canvas>
+
+            <!-- Map HUD Overlay -->
+            <div class="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md px-2.5 py-1.5 rounded-lg border border-slate-700 text-[10px] text-slate-300 space-y-0.5 pointer-events-none">
+              <div class="font-bold text-emerald-400">● LIVE GEO-FEED</div>
+              <div>Click map markers to locate details</div>
+            </div>
+
+            <div class="absolute bottom-3 right-3 bg-slate-900/85 backdrop-blur-md px-2.5 py-1.5 rounded-lg border border-slate-700 text-[10px] text-slate-300 flex items-center space-x-3 pointer-events-none">
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500"></span> Critical</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span> Warning</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Normal</span>
+            </div>
+          </div>
+
+          <div class="text-[11px] text-slate-500 flex justify-between items-center px-1">
+            <span>Hovering marker highlights corresponding grievance</span>
+            <button onclick="recenterMap()" class="text-emerald-600 hover:underline font-medium">Recenter Canvas</button>
+          </div>
+        </div>
+
+        <!-- Right: Filtered Issue Stream Cards -->
+        <div class="lg:col-span-7 flex flex-col space-y-4">
+          <div class="flex items-center justify-between px-1">
+            <div class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+              <span>Verified Grievances</span>
+              <span class="text-slate-400 font-normal font-ml" id="cards-count-label">(Showing 0 items)</span>
+            </div>
+            <span class="text-xs text-slate-400">Ranked by Community Urgency</span>
+          </div>
+
+          <!-- Cards Scroll Container -->
+          <div id="issues-container" class="space-y-3.5 max-h-[640px] overflow-y-auto pr-1">
+            <!-- Dynamically injected via JavaScript -->
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ============================================== -->
+    <!-- VIEW 2: COMMUNITY DRIVES & VIGILANCE -->
+    <!-- ============================================== -->
+    <section id="view-drives" class="view-panel hidden space-y-6">
+      
+      <div class="bg-gradient-to-r from-emerald-900 to-teal-950 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-lg">
+        <div class="relative z-10 max-w-2xl space-y-3">
+          <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold uppercase tracking-wider border border-emerald-500/30">
+            Nattukootam Action
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">Community Cleanups & Pre-Monsoon Vigilance</h2>
+          <p class="text-sm text-emerald-100/90 leading-relaxed font-sans">
+            Don't wait weeks for a tender. Join local youth clubs, Kudumbashree units, and resident associations to clear waterlogging channels, plant trees, and clean local riverbanks.
+          </p>
+          <div class="pt-2">
+            <button onclick="openNewDriveModal()" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs tracking-wide shadow-md active:scale-95 transition">
+              + Organize a New Local Drive
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drives Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5" id="drives-grid">
+        <!-- Injected via JS -->
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- VIEW 3: PANCHAYAT & WARD COUNCILLOR DASHBOARD -->
+    <!-- ============================================== -->
+    <section id="view-panchayat" class="view-panel hidden space-y-6">
+      
+      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 uppercase">LSGD Portal Mode</span>
+              <h2 class="text-xl font-bold text-slate-900">Ward 07 Councillor Action Panel</h2>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5 font-ml">ഗ്രാമപഞ്ചായത്ത് / നഗരസഭ വാർഡ് പ്രതിനിധി ഡാഷ്‌ബോർഡ്</p>
+          </div>
+          <div class="flex items-center space-x-2 text-xs">
+            <span class="text-slate-500">Authorized Officer:</span>
+            <span class="font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-lg">K. R. Sivadasan (Ward 7)</span>
+          </div>
+        </div>
+
+        <p class="text-xs text-slate-600 leading-relaxed">
+          Update reported community tickets, assign municipal contractors (KWA, KSEB, Haritha Karma Sena), and log estimated completion targets visible to ward citizens.
+        </p>
+
+        <!-- Official Administrative Ticket Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-600">
+            <thead class="bg-slate-50 text-slate-700 uppercase font-semibold text-[11px] border-y border-slate-200">
+              <tr>
+                <th class="py-3 px-3">Ticket ID</th>
+                <th class="py-3 px-3">Category & Title</th>
+                <th class="py-3 px-3">Location / Ward</th>
+                <th class="py-3 px-3">Urgency / Upvotes</th>
+                <th class="py-3 px-3">Current Status</th>
+                <th class="py-3 px-3 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="panchayat-table-body" class="divide-y divide-slate-100">
+              <!-- Dynamically populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ============================================== -->
+  <!-- MODAL: REPORT AN ISSUE (3-STEP WIZARD) -->
+  <!-- ============================================== -->
+  <div id="modal-report" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl border border-slate-200 max-w-lg w-full p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto">
+      
+      <button onclick="closeReportModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800 text-lg w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 transition">
+        &times;
+      </button>
+
+      <!-- Wizard Header -->
+      <div class="space-y-1">
+        <span class="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">Citizens Grievance Redressal</span>
+        <h3 class="text-xl font-bold text-slate-900">Report an Issue (പരാതി നൽകുക)</h3>
+        <p class="text-xs text-slate-500">Route your complaint straight to the local Ward Member and LSGD Engineers.</p>
+      </div>
+
+      <!-- Step Indicator Dots -->
+      <div class="flex items-center justify-between my-4 border-y border-slate-100 py-2 text-xs font-medium text-slate-500">
+        <span id="wizard-step-label">Step 1: Category & Details</span>
+        <div class="flex gap-1.5" id="step-indicators">
+          <span class="w-6 h-1.5 rounded-full bg-emerald-600"></span>
+          <span class="w-6 h-1.5 rounded-full bg-slate-200"></span>
+          <span class="w-6 h-1.5 rounded-full bg-slate-200"></span>
+        </div>
+      </div>
+
+      <!-- STEP 1: Details & Category -->
+      <div id="wizard-step-1" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Select Civic Category (വിഭാഗം):</label>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <button type="button" onclick="selectNewCategory('roads', this)" class="new-cat-btn border-2 border-emerald-600 bg-emerald-50 text-emerald-800 font-bold p-3 rounded-xl flex items-center gap-2">
+              <span>🚧</span>
+              <span>Roads & Potholes</span>
+            </button>
+            <button type="button" onclick="selectNewCategory('waste', this)" class="new-cat-btn border-2 border-slate-200 hover:border-slate-300 text-slate-700 p-3 rounded-xl flex items-center gap-2">
+              <span>🗑️</span>
+              <span>Waste Overflow</span>
+            </button>
+            <button type="button" onclick="selectNewCategory('water', this)" class="new-cat-btn border-2 border-slate-200 hover:border-slate-300 text-slate-700 p-3 rounded-xl flex items-center gap-2">
+              <span>💧</span>
+              <span>Water / Drainage</span>
+            </button>
+            <button type="button" onclick="selectNewCategory('lighting', this)" class="new-cat-btn border-2 border-slate-200 hover:border-slate-300 text-slate-700 p-3 rounded-xl flex items-center gap-2">
+              <span>💡</span>
+              <span>Streetlight Failure</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Issue Headline (ലഘുവിവരണം):</label>
+          <input type="text" id="new-title" placeholder="e.g. Deep pothole causing skidding near Aluva Bypass" 
+            class="w-full text-xs p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Detailed Description (വിശദാംശങ്ങൾ):</label>
+          <textarea id="new-desc" rows="3" placeholder="Provide context, how long it has been unresolved, waterlogging risk..." 
+            class="w-full text-xs p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-emerald-500 resize-none"></textarea>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <button onclick="goToStep(2)" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition">
+            Next: Location & Pin &rarr;
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Location & Severity -->
+      <div id="wizard-step-2" class="space-y-4 hidden">
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-bold text-slate-700">Location Landmark / Ward:</label>
+            <button type="button" onclick="autoDetectLocation()" class="text-[11px] text-emerald-600 hover:underline flex items-center gap-1">
+              <span>📍 Detect My GPS</span>
+            </button>
+          </div>
+          <input type="text" id="new-location" placeholder="e.g. Ward 4, Near Govt High School, Aluva" 
+            class="w-full text-xs p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">District (ജില്ല):</label>
+          <select id="new-district" class="w-full text-xs p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-emerald-500 bg-white">
+            <option value="Ernakulam">Ernakulam (എറണാകുളം)</option>
+            <option value="Thiruvananthapuram">Thiruvananthapuram (തിരുവനന്തപുരം)</option>
+            <option value="Thrissur">Thrissur (തൃശ്ശൂർ)</option>
+            <option value="Kozhikode">Kozhikode (കോഴിക്കോട്)</option>
+            <option value="Kollam">Kollam (കൊല്ലം)</option>
+            <option value="Palakkad">Palakkad (പാലക്കാട്)</option>
+            <option value="Alappuzha">Alappuzha (ആലപ്പുഴ)</option>
+            <option value="Kottayam">Kottayam (കോട്ടയം)</option>
+            <option value="Idukki">Idukki (ഇടുക്കി)</option>
+            <option value="Wayanad">Wayanad (വയനാട്)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Severity / Urgency Level:</label>
+          <div class="flex gap-2">
+            <label class="flex-1 text-center p-2 rounded-xl border border-slate-200 cursor-pointer text-xs peer-checked:bg-slate-100">
+              <input type="radio" name="severity" value="Normal" class="mr-1 accent-emerald-600" checked> Normal
+            </label>
+            <label class="flex-1 text-center p-2 rounded-xl border border-amber-300 bg-amber-50/50 cursor-pointer text-xs text-amber-900">
+              <input type="radio" name="severity" value="Urgent" class="mr-1 accent-amber-600"> Urgent (ശ്രദ്ധിക്കുക)
+            </label>
+            <label class="flex-1 text-center p-2 rounded-xl border border-red-300 bg-red-50/50 cursor-pointer text-xs text-red-900 font-bold">
+              <input type="radio" name="severity" value="Critical Hazard" class="mr-1 accent-red-600"> Hazard (അപകടസാധ്യത)
+            </label>
+          </div>
+        </div>
+
+        <div class="flex justify-between pt-2">
+          <button onclick="goToStep(1)" class="px-4 py-2 rounded-xl text-slate-500 hover:text-slate-800 text-xs font-medium">
+            &larr; Back
+          </button>
+          <button onclick="goToStep(3)" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition">
+            Next: Evidence Photo &rarr;
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Photo & AI Auto-Tag Verification -->
+      <div id="wizard-step-3" class="space-y-4 hidden">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Attach Photo Evidence:</label>
+          
+          <div class="border-2 border-dashed border-slate-300 rounded-2xl p-4 text-center cursor-pointer hover:border-emerald-500 transition bg-slate-50 relative" onclick="triggerSimulatedUpload()">
+            <input type="file" id="photo-file" accept="image/*" class="hidden" onchange="previewUploadedPhoto(event)">
+            <div id="upload-placeholder" class="space-y-1">
+              <span class="text-2xl">📸</span>
+              <p class="text-xs text-slate-700 font-medium">Click to capture or upload photo</p>
+              <p class="text-[10px] text-slate-400">JPG, PNG supported. Auto-analyzed for severity.</p>
+            </div>
+            <img id="photo-preview" class="hidden w-full h-36 object-cover rounded-xl mt-2 mx-auto">
+          </div>
+        </div>
+
+        <!-- Simulated AI Auto-Tag Badge -->
+        <div id="ai-tag-box" class="hidden bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs space-y-1">
+          <div class="flex items-center text-emerald-800 font-bold gap-1.5">
+            <span class="animate-spin text-sm">✨</span>
+            <span>Civic-AI Auto Detection:</span>
+          </div>
+          <div id="ai-tag-result" class="text-emerald-700 text-[11px]">
+            Target verified: High-depth asphalt fissure (Pothole). High traffic hazard verified.
+          </div>
+        </div>
+
+        <div class="flex justify-between pt-2">
+          <button onclick="goToStep(2)" class="px-4 py-2 rounded-xl text-slate-500 hover:text-slate-800 text-xs font-medium">
+            &larr; Back
+          </button>
+          <button onclick="submitNewIssue()" class="px-6 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-800/20 active:scale-95 transition">
+            Submit Grievance to LSGD 🚀
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: ORGANIZE NEW COMMUNITY DRIVE -->
+  <!-- ============================================== -->
+  <div id="modal-new-drive" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl border border-slate-200 max-w-md w-full p-6 shadow-2xl relative">
+      <button onclick="closeNewDriveModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800 text-lg">&times;</button>
+      
+      <div class="space-y-1">
+        <span class="text-[10px] font-bold text-teal-600 uppercase">Community Initiative</span>
+        <h3 class="text-lg font-bold text-slate-900">Create a Neighborhood Action Drive</h3>
+        <p class="text-xs text-slate-500">Mobilize neighbors for Sunday cleanups or canal desilting.</p>
+      </div>
+
+      <div class="space-y-3 mt-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Drive Title:</label>
+          <input type="text" id="drive-title" placeholder="e.g. Periyar Canal Plastic Cleanup" class="w-full p-2.5 rounded-xl border border-slate-300">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Organizing Group / Club:</label>
+          <input type="text" id="drive-club" placeholder="e.g. Navadhara Arts & Sports Club" class="w-full p-2.5 rounded-xl border border-slate-300">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Date:</label>
+            <input type="text" id="drive-date" placeholder="e.g. This Sunday, 7:00 AM" class="w-full p-2.5 rounded-xl border border-slate-300">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Ward / Location:</label>
+            <input type="text" id="drive-loc" placeholder="e.g. Ward 6 Junction" class="w-full p-2.5 rounded-xl border border-slate-300">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-4 border-t border-slate-100 mt-4">
+        <button onclick="closeNewDriveModal()" class="px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-800 text-xs">Cancel</button>
+        <button onclick="submitNewDrive()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs">Launch Drive 🤝</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-6 mt-12 text-slate-500 text-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center space-x-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+        <span class="font-bold text-slate-800">NattuKaryam (നാട്ടുകാര്യം)</span>
+        <span>— Open Community Grid for Local Self Government Departments (LSGD Kerala).</span>
+      </div>
+      <div class="text-[11px] text-slate-400">
+        Powered by citizen vigilance & Haritha Karma Sena coordination.
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================== -->
+  <!-- APPLICATION JAVASCRIPT ENGINE -->
+  <!-- ============================================== -->
+  <script>
+    /* ==============================================================
+       1. INITIAL CIVIC DATA & STATE MANAGEMENT
+       ============================================================== */
+    const DEFAULT_ISSUES = [
+      {
+        id: 'NK-8041',
+        title: 'Deep Monsoon Pothole Crater on Bypass Curve',
+        malTitle: 'ബൈപാസ് വളവിൽ അപകടകരമായ വലിയ കുഴി',
+        category: 'roads',
+        location: 'Ward 4, Near Desom Bridge, Aluva',
+        district: 'Ernakulam',
+        status: 'Reported',
+        severity: 'Critical Hazard',
+        upvotes: 84,
+        userHasVoted: false,
+        time: '3 hours ago',
+        image: 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600&auto=format&fit=crop&q=80',
+        mapX: 0.35,
+        mapY: 0.42,
+        assignedOfficer: 'PWD Road Inspector (Sub-Div 2)',
+        notes: 'Two two-wheelers skidded last night during the evening rain.'
+      },
+      {
+        id: 'NK-8042',
+        title: 'Plastic & Organic Waste Dumped at Canal Corner',
+        malTitle: 'തോടിന്റെ വശത്ത് പ്ലാസ്റ്റിക് മാലിന്യം കുന്നുകൂടി കിടക്കുന്നു',
+        category: 'waste',
+        location: 'Ward 8, Market Canal Road, Thrissur',
+        district: 'Thrissur',
+        status: 'In Progress',
+        severity: 'Urgent',
+        upvotes: 61,
+        userHasVoted: false,
+        time: 'Yesterday',
+        image: 'https://images.unsplash.com/photo-1605600659908-0ef719419d41?w=600&auto=format&fit=crop&q=80',
+        mapX: 0.52,
+        mapY: 0.28,
+        assignedOfficer: 'Haritha Karma Sena Unit 14',
+        notes: 'Sanitation squad scheduled for clearing tomorrow morning.'
+      },
+      {
+        id: 'NK-8043',
+        title: 'Drinking Water Main Pipeline Leakage & Road Cavity',
+        malTitle: 'കുടിവെള്ള പൈപ്പ് പൊട്ടി റോഡിൽ വെള്ളം ഒഴുകുന്നു',
+        category: 'water',
+        location: 'Ward 3, Temple Road, Kazhakoottam',
+        district: 'Thiruvananthapuram',
+        status: 'In Progress',
+        severity: 'Urgent',
+        upvotes: 112,
+        userHasVoted: false,
+        time: '1 day ago',
+        image: 'https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?w=600&auto=format&fit=crop&q=80',
+        mapX: 0.68,
+        mapY: 0.65,
+        assignedOfficer: 'KWA (Kerala Water Authority) Maintenance',
+        notes: 'Pressure drop noticed across 120 residential households.'
+      },
+      {
+        id: 'NK-8044',
+        title: 'Complete Streetlight Blackout on School Pathway',
+        malTitle: 'സ്കൂൾ റോഡിലെ തെരുവ് വിളക്കുകൾ കത്തുന്നില്ല',
+        category: 'lighting',
+        location: 'Ward 11, Kozhikode South',
+        district: 'Kozhikode',
+        status: 'Resolved',
+        severity: 'Normal',
+        upvotes: 39,
+        userHasVoted: false,
+        time: '3 days ago',
+        image: 'https://images.unsplash.com/photo-1509114397022-ed747cca3f65?w=600&auto=format&fit=crop&q=80',
+        mapX: 0.22,
+        mapY: 0.72,
+        assignedOfficer: 'KSEB Ward Section Line Crew',
+        notes: 'Blown capacitor replaced. All 6 sodium lights functioning.'
+      },
+      {
+        id: 'NK-8045',
+        title: 'Monsoon Culvert Blocked with Tree Branches',
+        malTitle: 'തോടിലെ കലുങ്ക് അടഞ്ഞ് വെള്ളക്കെട്ട് സാധ്യത',
+        category: 'water',
+        location: 'Ward 2, Kuttanad Pampa Tributary',
+        district: 'Alappuzha',
+        status: 'Reported',
+        severity: 'Critical Hazard',
+        upvotes: 147,
+        userHasVoted: false,
+        time: '4 hours ago',
+        image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=600&auto=format&fit=crop&q=80',
+        mapX: 0.44,
+        mapY: 0.82,
+        assignedOfficer: 'Irrigation Dept. Sub-Division',
+        notes: 'Water has already reached the foot of three adjacent homes.'
+      }
+    ];
+
+    const DEFAULT_DRIVES = [
+      {
+        id: 'D-101',
+        title: 'Pre-Monsoon Periyar Tributary Desilting',
+        malTitle: 'പെരിയാർ പോഷക കനാൽ ശുചീകരണ ഡ്രൈവ്',
+        organizer: 'Navadhara Youth Club & Residents Association',
+        ward: 'Ward 4 & 5 Canal Bank',
+        date: 'This Sunday, 6:30 AM',
+        attendees: 38,
+        joined: false,
+        type: 'Water & Flood Prevention',
+        badgeColor: 'bg-blue-100 text-blue-800'
+      },
+      {
+        id: 'D-102',
+        title: 'Zero-Waste Sunday: Plastic Segregation Drive',
+        malTitle: 'പ്ലാസ്റ്റിക് മാലിന്യ ശേഖരണ ക്യാമ്പ്',
+        organizer: 'Kudumbashree CDS Unit 8',
+        ward: 'Panchayat Community Hall Ground',
+        date: 'Saturday, 8:00 AM',
+        attendees: 52,
+        joined: false,
+        type: 'Waste Clearance',
+        badgeColor: 'bg-emerald-100 text-emerald-800'
+      },
+      {
+        id: 'D-103',
+        title: 'Roadside Pothole Gravel Filling & Visibility Paint',
+        malTitle: 'അപകട വളവുകളിലെ കുഴിയടക്കൽ',
+        organizer: 'Kozhikode Drivers Guild & Red Star Club',
+        ward: 'NH-66 Old Link Stretch',
+        date: 'Next Sunday, 7:00 AM',
+        attendees: 27,
+        joined: false,
+        type: 'Road Safety',
+        badgeColor: 'bg-amber-100 text-amber-800'
+      }
+    ];
+
+    // Local Storage Hydration
+    let issues = [];
+    try {
+      const stored = localStorage.getItem('nattukaryam_issues');
+      issues = stored ? JSON.parse(stored) : DEFAULT_ISSUES;
+    } catch(e) {
+      issues = DEFAULT_ISSUES;
+    }
+
+    let drives = [];
+    try {
+      const storedDrives = localStorage.getItem('nattukaryam_drives');
+      drives = storedDrives ? JSON.parse(storedDrives) : DEFAULT_DRIVES;
+    } catch(e) {
+      drives = DEFAULT_DRIVES;
+    }
+
+    let activeFilter = 'all';
+    let currentNewCategory = 'roads';
+    let highlightedIssueId = null;
+
+    /* ==============================================================
+       2. TAB NAVIGATION SYSTEM
+       ============================================================== */
+    function switchNav(viewId) {
+      document.querySelectorAll('.view-panel').forEach(p => p.classList.add('hidden'));
+      const activePanel = document.getElementById(`view-${viewId}`);
+      if (activePanel) activePanel.classList.remove('hidden');
+
+      // Desktop tabs
+      ['feed', 'drives', 'panchayat'].forEach(v => {
+        const btn = document.getElementById(`nav-btn-${v}`);
+        const mob = document.getElementById(`mob-nav-${v}`);
+        if (v === viewId) {
+          if (btn) btn.className = "px-3.5 py-2 rounded-lg text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 flex items-center space-x-1.5 transition";
+          if (mob) mob.className = "text-emerald-700 font-bold";
+        } else {
+          if (btn) btn.className = "px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center space-x-1.5 transition";
+          if (mob) mob.className = "text-slate-600";
+        }
+      });
+
+      if (viewId === 'feed') {
+        setTimeout(resizeCivicMap, 50);
+      }
+      if (viewId === 'panchayat') {
+        renderPanchayatTable();
+      }
+    }
+
+    function showToast(msg, icon = '✅') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').textContent = msg;
+      document.getElementById('toast-icon').textContent = icon;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+
+    /* ==============================================================
+       3. INTERACTIVE MAP ENGINE (CANVAS)
+       ============================================================== */
+    const mapCanvas = document.getElementById('civic-map-canvas');
+    const mCtx = mapCanvas.getContext('2d');
+    let mapAnimFrame = null;
+
+    function resizeCivicMap() {
+      if (!mapCanvas.parentElement) return;
+      mapCanvas.width = mapCanvas.parentElement.clientWidth;
+      mapCanvas.height = mapCanvas.parentElement.clientHeight;
+      drawCivicMap();
+    }
+
+    function drawCivicMap() {
+      if (!mapCanvas.width || !mapCanvas.height) return;
+      mCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+
+      const w = mapCanvas.width;
+      const h = mapCanvas.height;
+
+      // 1. Draw stylized Kerala green coastal grid
+      mCtx.fillStyle = '#091522';
+      mCtx.fillRect(0, 0, w, h);
+
+      // 2. Draw subtle topography water lines (Backwaters / River simulation)
+      mCtx.strokeStyle = 'rgba(56, 189, 248, 0.2)';
+      mCtx.lineWidth = 14;
+      mCtx.lineCap = 'round';
+      mCtx.beginPath();
+      mCtx.moveTo(w * 0.1, 0);
+      mCtx.bezierCurveTo(w * 0.25, h * 0.35, w * 0.18, h * 0.65, w * 0.35, h);
+      mCtx.stroke();
+
+      // Second canal branch
+      mCtx.lineWidth = 6;
+      mCtx.strokeStyle = 'rgba(56, 189, 248, 0.15)';
+      mCtx.beginPath();
+      mCtx.moveTo(w * 0.22, h * 0.45);
+      mCtx.lineTo(w * 0.85, h * 0.58);
+      mCtx.stroke();
+
+      // Road grids (MC Road / NH Arteries)
+      mCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+      mCtx.lineWidth = 4;
+      mCtx.beginPath();
+      mCtx.moveTo(0, h * 0.3);
+      mCtx.lineTo(w, h * 0.38);
+      mCtx.moveTo(w * 0.45, 0);
+      mCtx.lineTo(w * 0.65, h);
+      mCtx.stroke();
+
+      // Subtle ward sector grid lines
+      mCtx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+      mCtx.lineWidth = 1;
+      for (let x = 0; x < w; x += 40) {
+        mCtx.beginPath();
+        mCtx.moveTo(x, 0);
+        mCtx.lineTo(x, h);
+        mCtx.stroke();
+      }
+      for (let y = 0; y < h; y += 40) {
+        mCtx.beginPath();
+        mCtx.moveTo(0, y);
+        mCtx.lineTo(w, y);
+        mCtx.stroke();
+      }
+
+      // 3. Draw Issue Markers
+      const filtered = getFilteredIssues();
+      filtered.forEach(iss => {
+        const px = iss.mapX * w;
+        const py = iss.mapY * h;
+
+        const isHighlighted = (iss.id === highlightedIssueId);
+
+        // Color coding by severity
+        let pinColor = '#10b981'; // emerald
+        if (iss.severity === 'Critical Hazard') pinColor = '#ef4444'; // red
+        else if (iss.severity === 'Urgent') pinColor = '#f59e0b'; // amber
+
+        // Pulse radar circle
+        mCtx.beginPath();
+        mCtx.arc(px, py, isHighlighted ? 18 : 10, 0, Math.PI * 2);
+        mCtx.fillStyle = pinColor + '33';
+        mCtx.fill();
+
+        // Pin Body
+        mCtx.beginPath();
+        mCtx.arc(px, py, isHighlighted ? 7 : 5, 0, Math.PI * 2);
+        mCtx.fillStyle = pinColor;
+        mCtx.shadowColor = pinColor;
+        mCtx.shadowBlur = isHighlighted ? 12 : 5;
+        mCtx.fill();
+        mCtx.shadowBlur = 0;
+
+        // Label on highlight
+        if (isHighlighted) {
+          mCtx.fillStyle = '#ffffff';
+          mCtx.font = 'bold 11px Inter';
+          mCtx.fillText(iss.id, px + 10, py - 6);
+        }
+      });
+    }
+
+    function recenterMap() {
+      highlightedIssueId = null;
+      drawCivicMap();
+      showToast("Radar map view reset", "🗺️");
+    }
+
+    // Map click detects nearest marker
+    mapCanvas.addEventListener('click', (e) => {
+      const rect = mapCanvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      const w = mapCanvas.width;
+      const h = mapCanvas.height;
+
+      let closest = null;
+      let minDistance = 35; // click radius tolerance
+
+      issues.forEach(iss => {
+        const px = iss.mapX * w;
+        const py = iss.mapY * h;
+        const dist = Math.hypot(clickX - px, clickY - py);
+        if (dist < minDistance) {
+          closest = iss;
+          minDistance = dist;
+        }
+      });
+
+      if (closest) {
+        highlightedIssueId = closest.id;
+        drawCivicMap();
+        // Scroll card into view
+        const targetCard = document.getElementById(`card-${closest.id}`);
+        if (targetCard) {
+          targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          targetCard.classList.add('ring-2', 'ring-emerald-500');
+          setTimeout(() => targetCard.classList.remove('ring-2', 'ring-emerald-500'), 2500);
+        }
+      }
+    });
+
+    /* ==============================================================
+       4. ISSUES FEED & FILTERING
+       ============================================================== */
+    function getFilteredIssues() {
+      const status = document.getElementById('status-filter').value;
+      const search = document.getElementById('search-input').value.toLowerCase().trim();
+
+      return issues.filter(item => {
+        const matchCat = (activeFilter === 'all' || item.category === activeFilter);
+        const matchStatus = (status === 'all' || item.status === status);
+        const matchSearch = (!search || 
+          item.title.toLowerCase().includes(search) || 
+          item.location.toLowerCase().includes(search) ||
+          item.district.toLowerCase().includes(search) ||
+          item.id.toLowerCase().includes(search));
+        return matchCat && matchStatus && matchSearch;
+      });
+    }
+
+    function setCategoryFilter(cat) {
+      activeFilter = cat;
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        btn.classList.remove('bg-emerald-600', 'text-white', 'active');
+        btn.classList.add('bg-slate-100', 'text-slate-600');
+      });
+      event.target.classList.add('bg-emerald-600', 'text-white', 'active');
+      event.target.classList.remove('bg-slate-100', 'text-slate-600');
+
+      applyFilters();
+    }
+
+    function applyFilters() {
+      renderIssuesFeed();
+      drawCivicMap();
+      updateStatistics();
+    }
+
+    function renderIssuesFeed() {
+      const container = document.getElementById('issues-container');
+      const filtered = getFilteredIssues();
+
+      document.getElementById('cards-count-label').textContent = `(Showing ${filtered.length} of ${issues.length} items)`;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center space-y-2">
+            <span class="text-3xl">🌿</span>
+            <p class="text-sm font-bold text-slate-800">No reported grievances in this selection</p>
+            <p class="text-xs text-slate-400">All local systems functioning normally in this ward.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        const isCritical = item.severity === 'Critical Hazard';
+        const isUrgent = item.severity === 'Urgent';
+
+        let badgeStatusClass = 'bg-slate-100 text-slate-700';
+        if (item.status === 'Reported') badgeStatusClass = 'bg-amber-50 text-amber-800 border border-amber-200';
+        else if (item.status === 'In Progress') badgeStatusClass = 'bg-blue-50 text-blue-800 border border-blue-200';
+        else if (item.status === 'Resolved') badgeStatusClass = 'bg-emerald-50 text-emerald-800 border border-emerald-200';
+
+        const categoryIcons = {
+          roads: '🚧 Roads',
+          waste: '🗑️ Waste Clearance',
+          water: '💧 Water & Canal',
+          lighting: '💡 Streetlights'
+        };
+
+        return `
+          <div id="card-${item.id}" onmouseenter="hoverIssue('${item.id}')" class="bg-white rounded-2xl border ${isCritical ? 'border-red-200 bg-red-50/10' : 'border-slate-200'} p-4 sm:p-5 shadow-sm hover:shadow-md transition-all space-y-3.5">
+            
+            <!-- Card Top Metadata -->
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center space-x-2">
+                <span class="font-mono font-bold text-slate-500">${item.id}</span>
+                <span class="px-2 py-0.5 rounded-full font-medium text-[11px] bg-slate-100 text-slate-600">${categoryIcons[item.category] || item.category}</span>
+                <span class="text-[11px] text-slate-400">• ${item.time}</span>
+              </div>
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${badgeStatusClass}">
+                ${item.status}
+              </span>
+            </div>
+
+            <!-- Card Body & Image Split -->
+            <div class="flex flex-col-reverse sm:flex-row gap-4 justify-between items-start">
+              <div class="space-y-1.5 flex-grow">
+                <h4 class="font-bold text-slate-900 text-sm sm:text-base leading-snug">${item.title}</h4>
+                <p class="font-ml text-xs text-emerald-900 font-semibold">${item.malTitle}</p>
+                
+                <div class="flex items-center space-x-1.5 text-xs text-slate-500 pt-1">
+                  <svg class="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  <span class="font-medium text-slate-700">${item.location} (${item.district})</span>
+                </div>
+
+                ${item.notes ? `<p class="text-xs text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100 italic">"${item.notes}"</p>` : ''}
+              </div>
+
+              <!-- Evidence Photo Thumbnail -->
+              ${item.image ? `
+                <div class="w-full sm:w-28 sm:h-24 h-40 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100 border border-slate-200">
+                  <img src="${item.image}" alt="Evidence" class="w-full h-full object-cover hover:scale-105 transition duration-300" onerror="this.src='https://placehold.co/200x200/0f172a/ffffff?text=Evidence'">
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- Card Footer: Community 'Me Too' Upvotes & Authority Tag -->
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+              <div class="flex items-center space-x-2">
+                <button onclick="toggleUpvote('${item.id}')" class="px-3 py-1.5 rounded-xl border ${item.userHasVoted ? 'bg-emerald-600 text-white border-emerald-600 font-bold' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'} transition flex items-center space-x-1.5 text-xs active:scale-95">
+                  <span>👍 Me Too (ഞാനും ബാധിതൻ)</span>
+                  <span class="font-mono font-bold bg-white/20 px-1.5 py-0.2 rounded text-[11px]">${item.upvotes}</span>
+                </button>
+                ${isCritical ? '<span class="text-[10px] text-red-600 font-bold px-2 py-0.5 bg-red-100 rounded-md">Critical Hazard</span>' : ''}
+              </div>
+
+              <div class="text-[11px] text-slate-500 hidden sm:block">
+                Assigned: <strong class="text-slate-700">${item.assignedOfficer}</strong>
+              </div>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    function hoverIssue(id) {
+      highlightedIssueId = id;
+      drawCivicMap();
+    }
+
+    function toggleUpvote(id) {
+      const target = issues.find(i => i.id === id);
+      if (!target) return;
+
+      if (!target.userHasVoted) {
+        target.upvotes += 1;
+        target.userHasVoted = true;
+        showToast(`Urgency recorded for ${id}! Ward priority elevated.`, "📈");
+      } else {
+        target.upvotes -= 1;
+        target.userHasVoted = false;
+      }
+      saveIssuesState();
+      renderIssuesFeed();
+    }
+
+    function updateStatistics() {
+      const activeCount = issues.filter(i => i.status === 'Reported').length;
+      const progressCount = issues.filter(i => i.status === 'In Progress').length;
+      const resolvedCount = issues.filter(i => i.status === 'Resolved').length;
+
+      document.getElementById('stat-active').textContent = activeCount;
+      document.getElementById('stat-progress').textContent = progressCount;
+      document.getElementById('stat-resolved').textContent = resolvedCount;
+      document.getElementById('count-all').textContent = issues.length;
+    }
+
+    function saveIssuesState() {
+      try {
+        localStorage.setItem('nattukaryam_issues', JSON.stringify(issues));
+      } catch(e) {}
+    }
+
+    /* ==============================================================
+       5. COMMUNITY DRIVES LOGIC
+       ============================================================== */
+    function renderDrivesGrid() {
+      const container = document.getElementById('drives-grid');
+      container.innerHTML = drives.map(drive => {
+        return `
+          <div class="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm space-y-4 flex flex-col justify-between">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-xs">
+                <span class="px-2.5 py-0.5 rounded-full font-bold text-[10px] ${drive.badgeColor}">${drive.type}</span>
+                <span class="text-slate-400 font-mono text-[11px]">${drive.ward}</span>
+              </div>
+              <h3 class="font-bold text-slate-900 text-base leading-snug">${drive.title}</h3>
+              <p class="font-ml text-xs text-emerald-800 font-semibold">${drive.malTitle}</p>
+              
+              <div class="space-y-1 text-xs text-slate-600 pt-2">
+                <div class="flex items-center gap-1.5">
+                  <span>📅</span>
+                  <span class="font-medium">${drive.date}</span>
+                </div>
+                <div class="flex items-center gap-1.5 text-slate-500">
+                  <span>🛡️</span>
+                  <span>Led by: <strong>${drive.organizer}</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+              <span class="text-xs text-slate-500">
+                <strong class="text-slate-900 font-mono text-sm">${drive.attendees}</strong> volunteers joined
+              </span>
+              <button onclick="toggleJoinDrive('${drive.id}')" class="px-4 py-1.5 rounded-xl ${drive.joined ? 'bg-slate-200 text-slate-800 font-semibold' : 'bg-emerald-600 text-white font-bold hover:bg-emerald-700'} text-xs transition active:scale-95">
+                ${drive.joined ? 'Joined ✓' : 'Join Drive +'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleJoinDrive(id) {
+      const dr = drives.find(d => d.id === id);
+      if (!dr) return;
+      if (!dr.joined) {
+        dr.attendees += 1;
+        dr.joined = true;
+        showToast(`You have joined "${dr.title}"! Community unit notified.`, "🤝");
+      } else {
+        dr.attendees -= 1;
+        dr.joined = false;
+      }
+      try {
+        localStorage.setItem('nattukaryam_drives', JSON.stringify(drives));
+      } catch(e) {}
+      renderDrivesGrid();
+    }
+
+    function openNewDriveModal() {
+      document.getElementById('modal-new-drive').classList.remove('hidden');
+    }
+    function closeNewDriveModal() {
+      document.getElementById('modal-new-drive').classList.add('hidden');
+    }
+
+    function submitNewDrive() {
+      const title = document.getElementById('drive-title').value.trim();
+      const club = document.getElementById('drive-club').value.trim();
+      const date = document.getElementById('drive-date').value.trim();
+      const loc = document.getElementById('drive-loc').value.trim();
+
+      if (!title || !club) {
+        alert("Please specify the drive title and organizing club.");
+        return;
+      }
+
+      const newDrive = {
+        id: 'D-' + Math.floor(100 + Math.random() * 900),
+        title: title,
+        malTitle: 'ജനകീയ പങ്കാളിത്ത ശുചീകരണ യജ്ഞം',
+        organizer: club,
+        ward: loc || 'Ward Community Center',
+        date: date || 'This Weekend',
+        attendees: 1,
+        joined: true,
+        type: 'Citizen Action',
+        badgeColor: 'bg-teal-100 text-teal-800'
+      };
+
+      drives.unshift(newDrive);
+      try {
+        localStorage.setItem('nattukaryam_drives', JSON.stringify(drives));
+      } catch(e) {}
+
+      renderDrivesGrid();
+      closeNewDriveModal();
+      showToast("Community drive successfully published!", "🎉");
+    }
+
+    /* ==============================================================
+       6. PANCHAYAT / WARD OFFICIAL DASHBOARD VIEW
+       ============================================================== */
+    function renderPanchayatTable() {
+      const tbody = document.getElementById('panchayat-table-body');
+      tbody.innerHTML = issues.map(iss => {
+        return `
+          <tr class="hover:bg-slate-50/80 transition">
+            <td class="py-3 px-3 font-mono font-bold text-slate-800">${iss.id}</td>
+            <td class="py-3 px-3">
+              <div class="font-bold text-slate-900">${iss.title}</div>
+              <div class="text-[11px] text-slate-400 capitalize">${iss.category} • Assigned: ${iss.assignedOfficer}</div>
+            </td>
+            <td class="py-3 px-3 text-slate-700">${iss.location}</td>
+            <td class="py-3 px-3">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold ${iss.severity === 'Critical Hazard' ? 'bg-red-100 text-red-800' : 'bg-slate-100 text-slate-700'}">
+                ${iss.severity} (${iss.upvotes} votes)
+              </span>
+            </td>
+            <td class="py-3 px-3">
+              <select onchange="updateIssueStatus('${iss.id}', this.value)" class="text-xs border border-slate-300 rounded-lg px-2 py-1 bg-white font-semibold ${iss.status === 'Resolved' ? 'text-emerald-700' : (iss.status === 'In Progress' ? 'text-blue-700' : 'text-amber-700')}">
+                <option value="Reported" ${iss.status === 'Reported' ? 'selected' : ''}>⚠️ Reported</option>
+                <option value="In Progress" ${iss.status === 'In Progress' ? 'selected' : ''}>⚙️ In Progress</option>
+                <option value="Resolved" ${iss.status === 'Resolved' ? 'selected' : ''}>✅ Resolved</option>
+              </select>
+            </td>
+            <td class="py-3 px-3 text-right">
+              <button onclick="promptOfficialAction('${iss.id}')" class="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[11px]">
+                Log Work Log
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function updateIssueStatus(id, newStatus) {
+      const target = issues.find(i => i.id === id);
+      if (!target) return;
+      target.status = newStatus;
+      saveIssuesState();
+      updateStatistics();
+      showToast(`Ticket ${id} status updated to: ${newStatus}`, "🏛️");
+    }
+
+    function promptOfficialAction(id) {
+      const note = prompt(`Enter official Panchayat resolution update for ticket ${id}:`);
+      if (note && note.trim()) {
+        const target = issues.find(i => i.id === id);
+        if (target) {
+          target.notes = `Official Update: ${note.trim()}`;
+          saveIssuesState();
+          showToast(`Resolution logged for ${id}`, "📝");
+        }
+      }
+    }
+
+    /* ==============================================================
+       7. 3-STEP REPORT WIZARD & SIMULATED AI DETECTION
+       ============================================================== */
+    let wizardCurrentStep = 1;
+    let uploadedImageData = null;
+
+    function openReportModal() {
+      wizardCurrentStep = 1;
+      goToStep(1);
+      document.getElementById('modal-report').classList.remove('hidden');
+    }
+    function closeReportModal() {
+      document.getElementById('modal-report').classList.add('hidden');
+    }
+
+    function goToStep(step) {
+      wizardCurrentStep = step;
+      document.getElementById('wizard-step-1').classList.add('hidden');
+      document.getElementById('wizard-step-2').classList.add('hidden');
+      document.getElementById('wizard-step-3').classList.add('hidden');
+
+      document.getElementById(`wizard-step-${step}`).classList.remove('hidden');
+
+      const labels = [
+        "Step 1: Category & Details (വിഭാഗം)",
+        "Step 2: Location & Severity (സ്ഥലം)",
+        "Step 3: Evidence & AI Tagging (ഫോട്ടോ)"
+      ];
+      document.getElementById('wizard-step-label').textContent = labels[step - 1];
+
+      // Dots
+      const dots = document.getElementById('step-indicators').children;
+      for (let i = 0; i < dots.length; i++) {
+        dots[i].className = (i < step) 
+          ? "w-6 h-1.5 rounded-full bg-emerald-600 transition" 
+          : "w-6 h-1.5 rounded-full bg-slate-200 transition";
+      }
+    }
+
+    function selectNewCategory(cat, btn) {
+      currentNewCategory = cat;
+      document.querySelectorAll('.new-cat-btn').forEach(b => {
+        b.className = "new-cat-btn border-2 border-slate-200 hover:border-slate-300 text-slate-700 p-3 rounded-xl flex items-center gap-2";
+      });
+      btn.className = "new-cat-btn border-2 border-emerald-600 bg-emerald-50 text-emerald-800 font-bold p-3 rounded-xl flex items-center gap-2";
+    }
+
+    function autoDetectLocation() {
+      document.getElementById('new-location').value = "Ward 4, Near Aluva Private Bus Stand, Ernakulam";
+      showToast("GPS coordinates anchored to Ward 4, Ernakulam", "📍");
+    }
+
+    function triggerSimulatedUpload() {
+      document.getElementById('photo-file').click();
+    }
+
+    function previewUploadedPhoto(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        uploadedImageData = e.target.result;
+        const img = document.getElementById('photo-preview');
+        img.src = uploadedImageData;
+        img.classList.remove('hidden');
+        document.getElementById('upload-placeholder').classList.add('hidden');
+
+        // Trigger simulated AI recognition
+        const tagBox = document.getElementById('ai-tag-box');
+        const tagResult = document.getElementById('ai-tag-result');
+        tagBox.classList.remove('hidden');
+
+        const aiTags = {
+          roads: "✨ AI Visual Inspection: Detected 45cm asphalt road fracture (Pothole). High vehicular safety hazard verified.",
+          waste: "✨ AI Visual Inspection: Detected unsegregated solid municipal plastic waste overflow. Forwarded to Haritha Karma Sena.",
+          water: "✨ AI Visual Inspection: Detected pipeline burst or active waterlogging canal debris obstruction.",
+          lighting: "✨ AI Visual Inspection: Street infrastructure failure / unlit illumination post verified."
+        };
+
+        tagResult.textContent = aiTags[currentNewCategory] || "✨ Issue recognized and categorised with 94% visual confidence.";
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function submitNewIssue() {
+      const title = document.getElementById('new-title').value.trim();
+      const desc = document.getElementById('new-desc').value.trim();
+      const location = document.getElementById('new-location').value.trim();
+      const district = document.getElementById('new-district').value;
+      const severity = document.querySelector('input[name="severity"]:checked').value;
+
+      if (!title || !location) {
+        alert("Please provide at least an issue title and location landmark.");
+        return;
+      }
+
+      const categoryMalayalam = {
+        roads: 'റോഡ് കേടുപാടുകൾ',
+        waste: 'മാലിന്യ പ്രശ്നം',
+        water: 'കുടിവെള്ള / ഡ്രെയിനേജ് തകരാർ',
+        lighting: 'തെരുവ് വിളക്ക് കേടുപാടുകൾ'
+      };
+
+      const newTicket = {
+        id: 'NK-' + Math.floor(8100 + Math.random() * 900),
+        title: title,
+        malTitle: categoryMalayalam[currentNewCategory] || 'പരാതി',
+        category: currentNewCategory,
+        location: location,
+        district: district,
+        status: 'Reported',
+        severity: severity,
+        upvotes: 1,
+        userHasVoted: true,
+        time: 'Just now',
+        image: uploadedImageData || 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600&auto=format&fit=crop&q=80',
+        mapX: 0.25 + Math.random() * 0.5,
+        mapY: 0.25 + Math.random() * 0.5,
+        assignedOfficer: 'Pending LSGD Ward Allocation',
+        notes: desc || 'Citizen logged through NattuKaryam portal.'
+      };
+
+      issues.unshift(newTicket);
+      saveIssuesState();
+      applyFilters();
+
+      // Reset modal fields
+      document.getElementById('new-title').value = '';
+      document.getElementById('new-desc').value = '';
+      document.getElementById('new-location').value = '';
+      document.getElementById('photo-preview').classList.add('hidden');
+      document.getElementById('upload-placeholder').classList.remove('hidden');
+      document.getElementById('ai-tag-box').classList.add('hidden');
+      uploadedImageData = null;
+
+      closeReportModal();
+      showToast(`Grievance ${newTicket.id} filed! Ward representative alerted.`, "🚀");
+    }
+
+    /* ==============================================================
+       8. ONLOAD INITIALIZATION
+       ============================================================== */
+    window.onload = function() {
+      updateStatistics();
+      renderIssuesFeed();
+      renderDrivesGrid();
+      resizeCivicMap();
+
+      window.addEventListener('resize', () => {
+        resizeCivicMap();
+      });
+    };
+  </script>
+</body>
+</html>
